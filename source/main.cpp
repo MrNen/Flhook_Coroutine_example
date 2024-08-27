@@ -26,13 +26,19 @@ class [[nodiscard]]Task {
 
   explicit Task(std::coroutine_handle<Promise> h)
 	  : handle(h) {
+	updateStatus();
   }
 
   void run() {
 	if (status == Status::FINISHED) {
+	  handle.destroy();
 	  return;
 	}
 	handle.resume();
+	updateStatus();
+  }
+
+  void updateStatus(){
 	status = getStatusFromPromise(handle.promise());
   }
 
@@ -42,13 +48,12 @@ class [[nodiscard]]Task {
 };
 
 struct Promise {
-
   const Status getStatus() {
 	return value_;
   }
   Status value_;
-  std::suspend_always initial_suspend() const noexcept { return {}; }
-  std::suspend_never final_suspend() const noexcept { return {}; }
+  std::suspend_never initial_suspend() const noexcept { return {}; }
+  std::suspend_always final_suspend() const noexcept { return {}; }
 
   Task get_return_object() {
 	return Task(std::coroutine_handle<Promise>::from_promise(*this));
@@ -121,17 +126,38 @@ class TaskScheduler {
 
 };
 
+
+
+
+class Bar{
+ public:
 Task foo(int delay) {
+  co_yield Status::FLHOOK_AWAIT;
   std::cout << "Hello from FlHook.\n";
   co_yield Status::DATABASE_AWAIT;
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
   std::cout << "Hello from Mongo.\n";
   co_yield Status::FLHOOK_AWAIT;
   std::cout << "Hello from FlHook again.\n";
   co_return Status::FINISHED;
 }
 
+Task bar(){
+  std::cout << "Immediately do the thing.\n";
+  co_return Status::FINISHED;
+}
+
+};
+
 int main() {
-  auto func = std::make_shared<Task>(foo(5));
+
+  Bar bar;
+  auto func = std::make_shared<Task>(bar.foo(5));
+  auto func2 = std::make_shared<Task>(bar.bar());
+  func2->updateStatus();
+
+  auto status = func2->status;
+
   TaskScheduler ts;
 
   ts.addTask(func);
