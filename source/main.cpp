@@ -135,7 +135,7 @@ Task foo(int delay) {
   co_yield Status::FLHOOK_AWAIT;
   std::cout << "Hello from FlHook.\n";
   co_yield Status::DATABASE_AWAIT;
-  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  std::this_thread::sleep_for(std::chrono::milliseconds(delay));
   std::cout << "Hello from Mongo.\n";
   co_yield Status::FLHOOK_AWAIT;
   std::cout << "Hello from FlHook again.\n";
@@ -152,7 +152,7 @@ Task bar(){
 int main() {
 
   Bar bar;
-  auto func = std::make_shared<Task>(bar.foo(5));
+  auto func = std::make_shared<Task>(bar.foo(500));
   auto func2 = std::make_shared<Task>(bar.bar());
   func2->updateStatus();
 
