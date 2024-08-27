@@ -1,0 +1,9 @@
+{
+  "name" : "coroutines",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "3265c187c74914aa5569b75355badebfdbab7987",
+  "dependencies" : [ {
+    "name" : "concurrentqueue",
+    "version>=" : "1.0.4"
+  } ]
+}
